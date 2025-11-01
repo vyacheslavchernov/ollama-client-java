@@ -9,8 +9,8 @@ import ru.vych.dto.rq.generate.GenerateRequestBody;
 import ru.vych.dto.rq.model.ModelDetailsBody;
 import ru.vych.dto.rs.ApiResponseDTO;
 import ru.vych.dto.rs.generate.GenerateResponse;
-import ru.vych.dto.rs.model.AvailableModels;
 import ru.vych.dto.rs.model.Model;
+import ru.vych.dto.rs.model.ModelsList;
 import ru.vych.dto.rs.version.Version;
 
 import javax.swing.text.html.FormSubmitEvent.MethodType;
@@ -42,6 +42,7 @@ public class OllamaClient {
     //region ENDPOINTS
     private static final String VERSION_ENDPOINT = "version";
     private static final String TAGS_ENDPOINT = "tags";
+    private static final String PS_ENDPOINT = "ps";
     private static final String SHOW_ENDPOINT = "show";
     private static final String GENERATE_ENDPOINT = "generate";
     //endregion ENDPOINTS
@@ -81,8 +82,16 @@ public class OllamaClient {
      * @return Список моделей доступных на сервере Ollama
      * @see <a href="https://docs.ollama.com/api/tags">API Reference</a>
      */
-    public AvailableModels availableModels() {
-        return callApi(TAGS_ENDPOINT, GET, AvailableModels.class);
+    public ModelsList availableModels() {
+        return callApi(TAGS_ENDPOINT, GET, ModelsList.class);
+    }
+
+    /**
+     * @return Список моделей загруженных в память
+     * @see <a href="https://docs.ollama.com/api/ps">API Reference</a>
+     */
+    public ModelsList loadedModels() {
+        return callApi(PS_ENDPOINT, GET, ModelsList.class);
     }
 
     /**
@@ -106,9 +115,9 @@ public class OllamaClient {
      * @return обогащённый данными объект модели, который был передан в метод
      * @see <a href="https://docs.ollama.com/api-reference/show-model-details">API Reference</a>
      */
-    // TODO: При verbose==true падает. Требуется правка в ModelDetails
+    // TODO: https://github.com/vyacheslavchernov/ollama-client-java/issues/1 При verbose==true падает. Требуется правка в ModelDetails
     public Model modelDetails(Model model, boolean verbose) {
-        return model.copy(modelDetails(model.getName(), verbose));
+        return model.copyDetails(modelDetails(model.getName(), verbose));
     }
 
     /**
@@ -132,7 +141,7 @@ public class OllamaClient {
      * @return подробные данные о модели
      * @see <a href="https://docs.ollama.com/api-reference/show-model-details">API Reference</a>
      */
-    // TODO: При verbose==true падает. Требуется правка в ModelDetails
+    // TODO: https://github.com/vyacheslavchernov/ollama-client-java/issues/1 При verbose==true падает. Требуется правка в ModelDetails
     public Model modelDetails(String name, boolean verbose) {
         return callApi(SHOW_ENDPOINT, POST, Model.class, new ModelDetailsBody(name, verbose));
     }
@@ -218,9 +227,9 @@ public class OllamaClient {
     /**
      * Собрать объект запроса к API Ollama
      *
-     * @param uri путь запроса
-     * @param method метод запроса
-     * @param async признак асинхронности запроса
+     * @param uri     путь запроса
+     * @param method  метод запроса
+     * @param async   признак асинхронности запроса
      * @param payload тело запроса
      * @return сформированный, на основе переданных данных, объект запроса
      */

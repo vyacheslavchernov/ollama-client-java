@@ -4,17 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-import ru.vych.OllamaClient;
 import ru.vych.dto.rs.ApiResponseDTO;
 
 import java.util.Map;
 
 /**
- * Описание модели доступной на сервере Ollama.
- * При получении через метод {@link OllamaClient#availableModels()} данные будут неполными.
- * Полные данные о модели можно получить вызовом метода {@link OllamaClient#modelDetails(Model)}.
+ * DTO с информацией о модели
  *
- * @see <a href="https://docs.ollama.com/api/tags">API Reference</a>
+ * @see <a href="https://docs.ollama.com/api/ps">API Reference PS</a>
+ * @see <a href="https://docs.ollama.com/api/tags">API Reference TAGS</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
@@ -94,12 +92,30 @@ public class Model implements ApiResponseDTO {
     private Map<String, String> modelInfo;
 
     /**
-     * Скопировать данные из одной модели в другую.
+     * Время, когда модель будет выгружена из памяти
+     */
+    @JsonProperty("expires_at")
+    private String expiresAt;
+
+    /**
+     * Объём видеопамяти, который занимает модель в байтах
+     */
+    @JsonProperty("size_vram")
+    private Long sizeVram;
+
+    /**
+     * Длина контекста модели
+     */
+    @JsonProperty("context_length")
+    private Long contextLength;
+
+    /**
+     * Скопировать подробные данные из одной модели в другую.
      *
      * @param from объект из которого будет производиться копирование
      * @return текущий объект со скопированными данными из <i>from</i>
      */
-    public Model copy(Model from) {
+    public Model copyDetails(Model from) {
         parameters = from.getParameters() != null ? from.getParameters() : parameters;
         license = from.getLicense() != null ? from.getLicense() : license;
         capabilities = from.getCapabilities() != null ? from.getCapabilities() : capabilities;

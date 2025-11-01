@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import ru.vych.dto.rs.ApiResponseDTO;
 
-import java.util.Arrays;
-
 /**
  * DTO для ответа метода генерации Ollama
  *
