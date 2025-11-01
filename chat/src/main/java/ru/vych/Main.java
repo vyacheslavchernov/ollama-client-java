@@ -16,15 +16,18 @@ public class Main {
 
         var generationParams = new GenerateRequestBody(avail.getModels().get(1).getName())
                 .setPrompt("Привет")
-                .setStream(false);
+                .setStream(false)
+                .setKeepAlive("1m");
 
         var generation = client.generateResponse(generationParams);
 
         var genStream = client.generateAsyncResponse(generationParams).thenAccept(stream -> {
-            try(stream) {
+            try (stream) {
                 stream.forEach(dto -> System.out.print(dto.getResponse()));
             }
         }).get();
+
+        var loaded = client.loadedModels();
 
         int a = 2;
     }
