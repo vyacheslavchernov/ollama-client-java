@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import ru.vych.dto.rq.ApiRequestDTO;
+import ru.vych.dto.rq.chat.ChatRequestBody;
 import ru.vych.dto.rq.generate.GenerateRequestBody;
 import ru.vych.dto.rq.model.ModelDetailsBody;
 import ru.vych.dto.rs.ApiResponseDTO;
+import ru.vych.dto.rs.chat.ChatResponse;
 import ru.vych.dto.rs.generate.GenerateResponse;
 import ru.vych.dto.rs.model.Model;
 import ru.vych.dto.rs.model.ModelsList;
@@ -45,6 +47,7 @@ public class OllamaClient {
     private static final String PS_ENDPOINT = "ps";
     private static final String SHOW_ENDPOINT = "show";
     private static final String GENERATE_ENDPOINT = "generate";
+    private static final String CHAT_ENDPOINT = "chat";
     //endregion ENDPOINTS
 
     private final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
@@ -70,6 +73,8 @@ public class OllamaClient {
         log.debug("Created Ollama client for {}", ollamaUrl);
     }
 
+    //region VERSION_ENDPOINT
+
     /**
      * @return Версия Ollama
      * @see <a href="https://docs.ollama.com/api-reference/get-version">API Reference</a>
@@ -77,6 +82,9 @@ public class OllamaClient {
     public Version version() {
         return callApi(VERSION_ENDPOINT, GET, Version.class);
     }
+    //endregion
+
+    //region TAGS_ENDPOINT
 
     /**
      * @return Список моделей доступных на сервере Ollama
@@ -85,6 +93,9 @@ public class OllamaClient {
     public ModelsList availableModels() {
         return callApi(TAGS_ENDPOINT, GET, ModelsList.class);
     }
+    //endregion
+
+    //region PS_ENDPOINT
 
     /**
      * @return Список моделей загруженных в память
@@ -93,6 +104,9 @@ public class OllamaClient {
     public ModelsList loadedModels() {
         return callApi(PS_ENDPOINT, GET, ModelsList.class);
     }
+    //endregion
+
+    //region SHOW_ENDPOINT
 
     /**
      * Получить подробную информацию о модели.
@@ -145,6 +159,9 @@ public class OllamaClient {
     public Model modelDetails(String name, boolean verbose) {
         return callApi(SHOW_ENDPOINT, POST, Model.class, new ModelDetailsBody(name, verbose));
     }
+    //endregion
+
+    //region GENERATE_ENDPOINT
 
     /**
      * Сгенерировать ответ по предоставленным параметрам.
@@ -173,6 +190,39 @@ public class OllamaClient {
         parameters.setStream(true);
         return callApiAsync(GENERATE_ENDPOINT, POST, GenerateResponse.class, parameters);
     }
+    //endregion
+
+
+    //region GENERATE_ENDPOINT
+
+    /**
+     * Сгенерировать ответ в контексте чата (контекста).
+     * Метод для использования с параметром stream==false. Параметр будет принудительно выставлен.
+     * Для потокового получения ответа необходимо использовать перегрузку метод {@link OllamaClient#proceedAsyncChat(ChatRequestBody)}
+     *
+     * @param parameters параметры генерации, включая контекст чата
+     * @return ответ сгенерированный на основе контекста чата
+     * @see <a href="https://docs.ollama.com/api/chat">Api Reference</a>
+     */
+    public ChatResponse proceedChat(ChatRequestBody parameters) {
+        parameters.setStream(false);
+        return callApi(CHAT_ENDPOINT, POST, ChatResponse.class, parameters);
+    }
+
+    /**
+     * Сгенерировать ответ в контексте чата (контекста).
+     * Метод для использования с параметром stream==true. Параметр будет принудительно выставлен.
+     * Для получения ответа без потока необходимо использовать перегрузку метод {@link OllamaClient#proceedChat(ChatRequestBody)}
+     *
+     * @param parameters параметры генерации, включая контекст чата
+     * @return поток с частичным ответом генерации
+     * @see <a href="https://docs.ollama.com/api/chat">Api Reference</a>
+     */
+    public CompletableFuture<Stream<ChatResponse>> proceedAsyncChat(ChatRequestBody parameters) {
+        parameters.setStream(false);
+        return callApiAsync(CHAT_ENDPOINT, POST, ChatResponse.class, parameters);
+    }
+    //endregion
 
     /**
      * Вызов API Ollama
