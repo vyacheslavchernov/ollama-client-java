@@ -193,7 +193,7 @@ public class OllamaClient {
     //endregion
 
 
-    //region GENERATE_ENDPOINT
+    //region CHAT_ENDPOINT
 
     /**
      * Сгенерировать ответ в контексте чата (контекста).

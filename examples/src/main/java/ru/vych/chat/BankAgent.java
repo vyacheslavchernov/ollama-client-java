@@ -1,5 +1,6 @@
-package ru.vych;
+package ru.vych.chat;
 
+import ru.vych.OllamaClient;
 import ru.vych.agent.AbstractAgent;
 import ru.vych.dto.rq.chat.tool.ToolDefinition;
 import ru.vych.dto.rq.chat.tool.ToolFunction;

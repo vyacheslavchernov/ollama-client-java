@@ -1,4 +1,4 @@
-package ru.vych;
+package ru.vych.chat;
 
 /**
  * "Счёт", которым может управлять агент {@link BankAgent}
