@@ -8,6 +8,7 @@ import ru.vych.dto.rs.ApiResponseDTO;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * DTO с информацией о модели
@@ -119,5 +120,39 @@ public class Model implements ApiResponseDTO {
         details = from.getDetails() != null ? from.getDetails() : details;
         modelInfo = from.getModelInfo() != null ? from.getModelInfo() : modelInfo;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Model model1 = (Model) o;
+        return Objects.equals(capabilities, model1.capabilities) && Objects.equals(name, model1.name)
+                && Objects.equals(model, model1.model) && Objects.equals(modifiedAt, model1.modifiedAt)
+                && Objects.equals(details, model1.details) && Objects.equals(modelInfo, model1.modelInfo);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(capabilities, name, model, modifiedAt, details, modelInfo);
+    }
+
+    @Override
+    public String toString() {
+        return "Model{\n" +
+                "\tparameters='" + parameters + "',\n" +
+                "\tlicense='" + license + "',\n" +
+                "\tcapabilities=" + capabilities + ",\n" +
+                "\tname='" + name + "',\n" +
+                "\tmodel='" + model + "',\n" +
+                "\tmodifiedAt='" + modifiedAt + "',\n" +
+                "\tsize=" + size + ",\n" +
+                "\tdigest='" + digest + ",'\n" +
+                "\tdetails=" + details + ",\n" +
+                "\ttemplate='" + template + ",'\n" +
+                "\tmodelInfo=" + modelInfo + ",\n" +
+                "\texpiresAt='" + expiresAt + ",'\n" +
+                "\tsizeVram=" + sizeVram + ",\n" +
+                "\tcontextLength=" + contextLength + ",\n" +
+                '}';
     }
 }

@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>client</module>
-        <module>chat</module>
+        <module>examples</module>
     </modules>
 
     <properties>
