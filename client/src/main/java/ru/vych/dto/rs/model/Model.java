@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ru.vych.dto.rs.ApiResponseDTO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,16 +37,8 @@ public class Model implements ApiResponseDTO {
 
     /**
      * Список возможностей, поддерживаемых моделью.
-     * <p>
-     * Возможные значения:
-     * <ul>
-     *     <li>"completion" — модель может генерировать текст по подсказке;</li>
-     *     <li>"chat" — поддерживает диалоговый формат;</li>
-     *     <li>"vision" — может обрабатывать изображения (мультимодальная модель);</li>
-     *     <li>"embedding" — поддерживает создание векторных представлений текста;</li>
-     * </ul>
      */
-    private String[] capabilities;
+    private List<ModelCapabilities> capabilities;
 
     /**
      * Имя модели
