@@ -12,7 +12,7 @@ import ru.vych.dto.rs.ApiResponseDTO;
  */
 @Getter
 @Setter
-public class GenerateResponse implements ApiResponseDTO {
+public class GenerateResponseBody implements ApiResponseDTO {
     /**
      * Имя модели, которая сгенерировала ответ
      */
