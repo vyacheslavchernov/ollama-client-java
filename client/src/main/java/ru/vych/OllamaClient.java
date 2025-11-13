@@ -12,6 +12,7 @@ import ru.vych.dto.rs.ApiResponseDTO;
 import ru.vych.dto.rs.chat.ChatResponse;
 import ru.vych.dto.rs.generate.GenerateResponse;
 import ru.vych.dto.rs.model.Model;
+import ru.vych.dto.rs.model.ModelCapabilities;
 import ru.vych.dto.rs.model.ModelsList;
 import ru.vych.dto.rs.version.Version;
 
@@ -20,6 +21,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -110,10 +115,9 @@ public class OllamaClient {
 
     /**
      * Получить подробную информацию о модели.
-     * Полученные данные будут дописаны в объект, который был передан в метод.
      *
-     * @param model модель для обогащения подробными данными
-     * @return обогащённый данными объект модели, который был передан в метод
+     * @param model модель для которой следует запросить подробную информацию
+     * @return объект модели с подробными данными
      * @see <a href="https://docs.ollama.com/api-reference/show-model-details">API Reference</a>
      */
     public Model modelDetails(Model model) {
@@ -122,21 +126,19 @@ public class OllamaClient {
 
     /**
      * Получить подробную информацию о модели.
-     * Полученные данные будут дописаны в объект, который был передан в метод.
      *
-     * @param model   модель для обогащения подробными данными
+     * @param model   модель для которой следует запросить подробную информацию
      * @param verbose если true, возвращает расширенные данные, включая подробности по слоям, токенизатору и параметрам
-     * @return обогащённый данными объект модели, который был передан в метод
+     * @return объект модели с подробными данными
      * @see <a href="https://docs.ollama.com/api-reference/show-model-details">API Reference</a>
      */
     // TODO: https://github.com/vyacheslavchernov/ollama-client-java/issues/1 При verbose==true падает. Требуется правка в ModelDetails
     public Model modelDetails(Model model, boolean verbose) {
-        return model.copyDetails(modelDetails(model.getName(), verbose));
+        return new Model().copy(model).copy(modelDetails(model.getName(), verbose));
     }
 
     /**
      * Получить подробную информацию о модели.
-     * Полученные данные будут дописаны в объект, который был передан в метод.
      *
      * @param name имя модели
      * @return подробные данные о модели
@@ -148,7 +150,6 @@ public class OllamaClient {
 
     /**
      * Получить подробную информацию о модели.
-     * Полученные данные будут дописаны в объект, который был передан в метод.
      *
      * @param name    имя модели
      * @param verbose если true, возвращает расширенные данные, включая подробности по слоям, токенизатору и параметрам
@@ -221,6 +222,52 @@ public class OllamaClient {
     public CompletableFuture<Stream<ChatResponse>> proceedAsyncChat(ChatRequestBody parameters) {
         parameters.setStream(false);
         return callApiAsync(CHAT_ENDPOINT, POST, ChatResponse.class, parameters);
+    }
+    //endregion
+
+    //region model finders
+
+    /**
+     * Получить модели доступные в Ollama отобранные по их возможностям
+     * Если моделей не найдено, то возвращается пустой список.
+     *
+     * @param capabilities множество возможностей по которым должен произойти отбор
+     * @return список моделей подходящий под условия
+     */
+    public List<Model> getModelsByCapabilities(Set<ModelCapabilities> capabilities) {
+        return availableModels().getModels().stream()
+                .filter(model -> {
+                    var details = modelDetails(model);
+                    return new HashSet<>(details.getCapabilities()).containsAll(capabilities);
+                }).toList();
+    }
+
+    /**
+     * Получить модели доступные в Ollama отобранные по их семейству.
+     * Если моделей не найдено, то возвращается пустой список.
+     *
+     * @param modelFamily семейство по которому будет произведён отбор
+     * @return список моделей подходящих под условия
+     */
+    public List<Model> getModelsByFamily(String modelFamily) {
+        return availableModels().getModels().stream()
+                .filter(model -> model.getDetails().getFamily().toLowerCase().trim().contains(modelFamily.toLowerCase().trim())
+                        || Arrays.stream(model.getDetails().getFamilies())
+                        .anyMatch(f -> f.toLowerCase().trim().contains(modelFamily.toLowerCase().trim()))).toList();
+    }
+
+    /**
+     * Получить конкретную модель доступную в Ollama по её имени.
+     * Если модель не найдена, то возвращается null.
+     *
+     * @param modelName имя модели для поиска
+     * @return объект модели или null, если модель не найдена
+     */
+    public Model getModelByName(String modelName) {
+        return availableModels().getModels().stream()
+                .filter(model -> modelName.toLowerCase().trim().equals(model.getName().toLowerCase().trim()))
+                .findFirst()
+                .orElse(null);
     }
     //endregion
 

@@ -3,7 +3,10 @@ package ru.vych.generate;
 import ru.vych.OllamaClient;
 import ru.vych.dto.rq.generate.GenerateRequestBody;
 
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
+
+import static ru.vych.dto.rs.model.ModelCapabilities.COMPLETION;
 
 /**
  * Пример генерации контента с помощью Ollama
@@ -13,8 +16,8 @@ public class GenerateResponseExample {
         // Создание клиента
         var client = new OllamaClient();
 
-        // Получение первой доступной модели в Ollama
-        var model = client.availableModels().getModels().getFirst();
+        // Получение первой доступной модели в Ollama с нужными возможностями
+        var model = client.getModelsByCapabilities(Set.of(COMPLETION)).getFirst();
 
         // Параметры генерации
         var generationParams = new GenerateRequestBody(model.getName())
@@ -25,6 +28,7 @@ public class GenerateResponseExample {
         var generation = client.generateResponse(generationParams);
         System.out.printf("Ответ от модели '%s':\n%s\n\n", generation.getModel(), generation.getResponse());
 
+        // Потоковая генерация
         System.out.printf("Потоковая генерация ответа от модели '%s':\n", model.getModel());
         generationParams.setPrompt("Напиши один небольшой абзац текста на тему кошек.");
         client.generateAsyncResponse(generationParams).thenAccept(stream -> {
