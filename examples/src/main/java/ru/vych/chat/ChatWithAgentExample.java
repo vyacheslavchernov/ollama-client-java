@@ -2,6 +2,11 @@ package ru.vych.chat;
 
 import ru.vych.OllamaClient;
 
+import java.util.Set;
+
+import static ru.vych.dto.rs.model.ModelCapabilities.COMPLETION;
+import static ru.vych.dto.rs.model.ModelCapabilities.TOOLS;
+
 /**
  * Пример обмена сообщениями с моделью с удержанием контекста (чата).
  * Для более детальной информации по агенту см. {@link BankAgent}
@@ -11,8 +16,8 @@ public class ChatWithAgentExample {
         // Создание клиента
         var client = new OllamaClient();
 
-        // Получение первой доступной модели в Ollama
-        var model = client.availableModels().getModels().getFirst();
+        // Получение первой доступной модели в Ollama с нужными возможностями
+        var model = client.getModelsByCapabilities(Set.of(TOOLS, COMPLETION)).getFirst();
 
         // Создание кастомного агента
         var bankAgent = new BankAgent(client, model);

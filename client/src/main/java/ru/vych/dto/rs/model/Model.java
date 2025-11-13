@@ -109,16 +109,21 @@ public class Model implements ApiResponseDTO {
      * @param from объект из которого будет производиться копирование
      * @return текущий объект со скопированными данными из <i>from</i>
      */
-    public Model copyDetails(Model from) {
+    public Model copy(Model from) {
         parameters = from.getParameters() != null ? from.getParameters() : parameters;
         license = from.getLicense() != null ? from.getLicense() : license;
         capabilities = from.getCapabilities() != null ? from.getCapabilities() : capabilities;
+        name = from.getName() != null ? from.getName() : name;
         model = from.getModel() != null ? from.getModel() : model;
         modifiedAt = from.getModifiedAt() != null ? from.getModifiedAt() : modifiedAt;
         size = from.getSize() != null ? from.getSize() : size;
         digest = from.getDigest() != null ? from.getDigest() : digest;
         details = from.getDetails() != null ? from.getDetails() : details;
+        template = from.getTemplate() != null ? from.getTemplate() : template;
         modelInfo = from.getModelInfo() != null ? from.getModelInfo() : modelInfo;
+        expiresAt = from.getExpiresAt() != null ? from.getExpiresAt() : expiresAt;
+        sizeVram = from.getSizeVram() != null ? from.getSizeVram() : sizeVram;
+        contextLength = from.getContextLength() != null ? from.getContextLength() : contextLength;
         return this;
     }
 
