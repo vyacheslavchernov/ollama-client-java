@@ -6,11 +6,13 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import ru.vych.dto.rq.ApiRequestDTO;
 import ru.vych.dto.rq.chat.ChatRequestBody;
+import ru.vych.dto.rq.embed.GenerateEmbeddingRequestBody;
 import ru.vych.dto.rq.generate.GenerateRequestBody;
 import ru.vych.dto.rq.model.ModelDetailsBody;
 import ru.vych.dto.rs.ApiResponseDTO;
 import ru.vych.dto.rs.chat.ChatResponse;
-import ru.vych.dto.rs.generate.GenerateResponse;
+import ru.vych.dto.rs.embed.GenerateEmbeddingResponseBody;
+import ru.vych.dto.rs.generate.GenerateResponseBody;
 import ru.vych.dto.rs.model.Model;
 import ru.vych.dto.rs.model.ModelCapabilities;
 import ru.vych.dto.rs.model.ModelsList;
@@ -53,6 +55,7 @@ public class OllamaClient {
     private static final String SHOW_ENDPOINT = "show";
     private static final String GENERATE_ENDPOINT = "generate";
     private static final String CHAT_ENDPOINT = "chat";
+    private static final String EMBED_ENDPOINT = "embed";
     //endregion ENDPOINTS
 
     private final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
@@ -173,9 +176,9 @@ public class OllamaClient {
      * @return ответ от Ollama с результатами генерации
      * @see <a href="https://docs.ollama.com/api/generate">Api Reference</a>
      */
-    public GenerateResponse generateResponse(GenerateRequestBody parameters) {
+    public GenerateResponseBody generateResponse(GenerateRequestBody parameters) {
         parameters.setStream(false);
-        return callApi(GENERATE_ENDPOINT, POST, GenerateResponse.class, parameters);
+        return callApi(GENERATE_ENDPOINT, POST, GenerateResponseBody.class, parameters);
     }
 
     /**
@@ -187,12 +190,11 @@ public class OllamaClient {
      * @return поток с частичным ответом генерации
      * @see <a href="https://docs.ollama.com/api/generate">Api Reference</a>
      */
-    public CompletableFuture<Stream<GenerateResponse>> generateAsyncResponse(GenerateRequestBody parameters) {
+    public CompletableFuture<Stream<GenerateResponseBody>> generateAsyncResponse(GenerateRequestBody parameters) {
         parameters.setStream(true);
-        return callApiAsync(GENERATE_ENDPOINT, POST, GenerateResponse.class, parameters);
+        return callApiAsync(GENERATE_ENDPOINT, POST, GenerateResponseBody.class, parameters);
     }
     //endregion
-
 
     //region CHAT_ENDPOINT
 
@@ -222,6 +224,20 @@ public class OllamaClient {
     public CompletableFuture<Stream<ChatResponse>> proceedAsyncChat(ChatRequestBody parameters) {
         parameters.setStream(false);
         return callApiAsync(CHAT_ENDPOINT, POST, ChatResponse.class, parameters);
+    }
+    //endregion
+
+    //region EMBED_ENDPOINT
+
+    /**
+     * Сгенерировать эмбеддинги с помощью модели
+     *
+     * @param parameters параметры генерации, включая текст для генерации эмбеддингов
+     * @return ответ генерации
+     * @see <a href="https://docs.ollama.com/api/embed">Api Reference</a>
+     */
+    public GenerateEmbeddingResponseBody generateEmbedding(GenerateEmbeddingRequestBody parameters) {
+        return callApi(EMBED_ENDPOINT, POST, GenerateEmbeddingResponseBody.class, parameters);
     }
     //endregion
 
