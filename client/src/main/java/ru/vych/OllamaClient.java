@@ -9,16 +9,19 @@ import ru.vych.dto.rq.chat.ChatRequestBody;
 import ru.vych.dto.rq.embed.GenerateEmbeddingRequestBody;
 import ru.vych.dto.rq.generate.GenerateRequestBody;
 import ru.vych.dto.rq.model.ModelDetailsBody;
+import ru.vych.dto.rq.repo.DeleteModelRequestBody;
+import ru.vych.dto.rq.repo.PullModelRequestBody;
 import ru.vych.dto.rs.ApiResponseDTO;
+import ru.vych.dto.rs.HttpCodeResponse;
 import ru.vych.dto.rs.chat.ChatResponse;
 import ru.vych.dto.rs.embed.GenerateEmbeddingResponseBody;
 import ru.vych.dto.rs.generate.GenerateResponseBody;
 import ru.vych.dto.rs.model.Model;
 import ru.vych.dto.rs.model.ModelCapabilities;
 import ru.vych.dto.rs.model.ModelsList;
+import ru.vych.dto.rs.repo.StatusResponseBody;
 import ru.vych.dto.rs.version.Version;
 
-import javax.swing.text.html.FormSubmitEvent.MethodType;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -30,8 +33,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import static javax.swing.text.html.FormSubmitEvent.MethodType.GET;
-import static javax.swing.text.html.FormSubmitEvent.MethodType.POST;
+import static ru.vych.HttpMethods.*;
 
 /**
  * Класс реализует методы для обращения к Ollama.
@@ -56,6 +58,8 @@ public class OllamaClient {
     private static final String GENERATE_ENDPOINT = "generate";
     private static final String CHAT_ENDPOINT = "chat";
     private static final String EMBED_ENDPOINT = "embed";
+    private static final String PULL_ENDPOINT = "pull";
+    private static final String DELETE_ENDPOINT = "delete";
     //endregion ENDPOINTS
 
     private final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
@@ -287,6 +291,48 @@ public class OllamaClient {
     }
     //endregion
 
+    //region REPO ENDPOINTS
+
+    /**
+     * Загрузить модель в локальный репозиторий Ollama.
+     * Метод для использования с параметром stream==false. Параметр будет принудительно выставлен.
+     * Для потокового получения ответа необходимо использовать перегрузку метод {@link OllamaClient#pullModelAsync(PullModelRequestBody)}
+     *
+     * @param parameters параметры запроса
+     * @return статус загрузки
+     * @see <a href="https://docs.ollama.com/api/pull">API Reference</a>
+     */
+    public StatusResponseBody pullModel(PullModelRequestBody parameters) {
+        parameters.setStream(false);
+        return callApi(PULL_ENDPOINT, POST, StatusResponseBody.class, parameters);
+    }
+
+    /**
+     * Загрузить модель в локальный репозиторий Ollama.
+     * Метод для использования с параметром stream==true. Параметр будет принудительно выставлен.
+     * Для не потокового получения ответа необходимо использовать перегрузку метод {@link OllamaClient#pullModel(PullModelRequestBody)}
+     *
+     * @param parameters параметры запроса
+     * @return поток с промежуточными статусами загрузки
+     * @see <a href="https://docs.ollama.com/api/pull">API Reference</a>
+     */
+    public CompletableFuture<Stream<StatusResponseBody>> pullModelAsync(PullModelRequestBody parameters) {
+        parameters.setStream(true);
+        return callApiAsync(PULL_ENDPOINT, POST, StatusResponseBody.class, parameters);
+    }
+
+    /**
+     * Удалить модель из локального репозитория Ollama
+     *
+     * @param parameters параметры запроса
+     * @return статус-код ответа (200 - удаление успешно)
+     * @see <a href="https://docs.ollama.com/api/delete">API Reference</a>
+     */
+    public HttpCodeResponse deleteModel(DeleteModelRequestBody parameters) {
+        return callApi(DELETE_ENDPOINT, DELETE, HttpCodeResponse.class, parameters);
+    }
+    //endregion
+
     /**
      * Вызов API Ollama
      *
@@ -298,12 +344,19 @@ public class OllamaClient {
      * @return ответ от API Ollama
      */
     @SneakyThrows
-    private <T extends ApiResponseDTO> T callApi(String endpoint, MethodType method, Class<T> responseDto, ApiRequestDTO... payload) {
+    private <T extends ApiResponseDTO> T callApi(String endpoint, HttpMethods method, Class<T> responseDto, ApiRequestDTO... payload) {
         var uri = new URI(ollamaUrl + endpoint);
         var rq = buildRequest(uri, method, false, payload);
         var rs = httpClient.send(rq, HttpResponse.BodyHandlers.ofString());
+
+        if (responseDto.equals(HttpCodeResponse.class)) {
+            log.debug("Got response from [{}] with code {}", uri, rs.statusCode());
+            //noinspection unchecked
+            return (T) new HttpCodeResponse(rs.statusCode());
+        }
+
         T rsDto = mapper.readValue(rs.body(), responseDto);
-        log.debug("Got response from [{}] : {}", uri, mapper.writeValueAsString(rsDto));
+        log.debug("Got response from [{}] with code {} : {}", uri, rs.statusCode(), mapper.writeValueAsString(rsDto));
         return rsDto;
     }
 
@@ -318,7 +371,7 @@ public class OllamaClient {
      * @return {@link Stream} ответов от API Ollama в виде {@link CompletableFuture}
      */
     @SneakyThrows
-    private <T extends ApiResponseDTO> CompletableFuture<Stream<T>> callApiAsync(String endpoint, MethodType method, Class<T> responseDto, ApiRequestDTO... payload) {
+    private <T extends ApiResponseDTO> CompletableFuture<Stream<T>> callApiAsync(String endpoint, HttpMethods method, Class<T> responseDto, ApiRequestDTO... payload) {
         var uri = new URI(ollamaUrl + endpoint);
         var rq = buildRequest(uri, method, true, payload);
         return httpClient.sendAsync(rq, HttpResponse.BodyHandlers.ofLines())
@@ -347,13 +400,14 @@ public class OllamaClient {
      * @return сформированный, на основе переданных данных, объект запроса
      */
     @SneakyThrows
-    private HttpRequest buildRequest(URI uri, MethodType method, boolean async, ApiRequestDTO... payload) {
+    private HttpRequest buildRequest(URI uri, HttpMethods method, boolean async, ApiRequestDTO... payload) {
         var rqBody = payload.length == 0 ? "" : mapper.writeValueAsString(payload[0]);
         log.debug("Sending {} {} request on [{}] with payload: {}", async ? "async" : "", method, uri, rqBody);
         var rq = HttpRequest.newBuilder(uri);
         switch (method) {
             case GET -> rq.GET();
             case POST -> rq.POST(HttpRequest.BodyPublishers.ofString(rqBody));
+            case DELETE -> rq.method("DELETE", HttpRequest.BodyPublishers.ofString(rqBody));
             default -> throw new RuntimeException("Unexpected http method - " + method);
         }
         return rq.build();
