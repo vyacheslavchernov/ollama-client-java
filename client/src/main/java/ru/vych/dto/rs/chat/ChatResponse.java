@@ -1,20 +1,19 @@
-package ru.vych.dto.rs.generate;
+package ru.vych.dto.rs.chat;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+import ru.vych.dto.rq.chat.ChatMessage;
 import ru.vych.dto.rs.ApiResponseDTO;
 
-import java.util.Arrays;
-
 /**
- * DTO для ответа метода генерации Ollama
+ * DTO для ответа метода генерации Ollama в формате чата
  *
- * @see <a href="https://docs.ollama.com/api/generate">Api Reference</a>
+ * @see <a href="https://docs.ollama.com/api/chat">Api Reference</a>
  */
 @Getter
 @Setter
-public class GenerateResponse implements ApiResponseDTO {
+public class ChatResponse implements ApiResponseDTO {
     /**
      * Имя модели, которая сгенерировала ответ
      */
@@ -26,10 +25,7 @@ public class GenerateResponse implements ApiResponseDTO {
     @JsonProperty("created_at")
     private String createdAt;
 
-    /**
-     * Текст ответа, который был сгенерирован моделью
-     */
-    private String response;
+    private ChatMessage message;
 
     /**
      * Тест размышлений модели в процессе генерации ответа.

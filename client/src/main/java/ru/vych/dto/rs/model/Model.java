@@ -4,17 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-import ru.vych.OllamaClient;
 import ru.vych.dto.rs.ApiResponseDTO;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
- * Описание модели доступной на сервере Ollama.
- * При получении через метод {@link OllamaClient#availableModels()} данные будут неполными.
- * Полные данные о модели можно получить вызовом метода {@link OllamaClient#modelDetails(Model)}.
+ * DTO с информацией о модели
  *
- * @see <a href="https://docs.ollama.com/api/tags">API Reference</a>
+ * @see <a href="https://docs.ollama.com/api/ps">API Reference PS</a>
+ * @see <a href="https://docs.ollama.com/api/tags">API Reference TAGS</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
@@ -38,16 +38,8 @@ public class Model implements ApiResponseDTO {
 
     /**
      * Список возможностей, поддерживаемых моделью.
-     * <p>
-     * Возможные значения:
-     * <ul>
-     *     <li>"completion" — модель может генерировать текст по подсказке;</li>
-     *     <li>"chat" — поддерживает диалоговый формат;</li>
-     *     <li>"vision" — может обрабатывать изображения (мультимодальная модель);</li>
-     *     <li>"embedding" — поддерживает создание векторных представлений текста;</li>
-     * </ul>
      */
-    private String[] capabilities;
+    private List<ModelCapabilities> capabilities;
 
     /**
      * Имя модели
@@ -94,7 +86,25 @@ public class Model implements ApiResponseDTO {
     private Map<String, String> modelInfo;
 
     /**
-     * Скопировать данные из одной модели в другую.
+     * Время, когда модель будет выгружена из памяти
+     */
+    @JsonProperty("expires_at")
+    private String expiresAt;
+
+    /**
+     * Объём видеопамяти, который занимает модель в байтах
+     */
+    @JsonProperty("size_vram")
+    private Long sizeVram;
+
+    /**
+     * Длина контекста модели
+     */
+    @JsonProperty("context_length")
+    private Long contextLength;
+
+    /**
+     * Скопировать подробные данные из одной модели в другую.
      *
      * @param from объект из которого будет производиться копирование
      * @return текущий объект со скопированными данными из <i>from</i>
@@ -103,12 +113,51 @@ public class Model implements ApiResponseDTO {
         parameters = from.getParameters() != null ? from.getParameters() : parameters;
         license = from.getLicense() != null ? from.getLicense() : license;
         capabilities = from.getCapabilities() != null ? from.getCapabilities() : capabilities;
+        name = from.getName() != null ? from.getName() : name;
         model = from.getModel() != null ? from.getModel() : model;
         modifiedAt = from.getModifiedAt() != null ? from.getModifiedAt() : modifiedAt;
         size = from.getSize() != null ? from.getSize() : size;
         digest = from.getDigest() != null ? from.getDigest() : digest;
         details = from.getDetails() != null ? from.getDetails() : details;
+        template = from.getTemplate() != null ? from.getTemplate() : template;
         modelInfo = from.getModelInfo() != null ? from.getModelInfo() : modelInfo;
+        expiresAt = from.getExpiresAt() != null ? from.getExpiresAt() : expiresAt;
+        sizeVram = from.getSizeVram() != null ? from.getSizeVram() : sizeVram;
+        contextLength = from.getContextLength() != null ? from.getContextLength() : contextLength;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Model model1 = (Model) o;
+        return Objects.equals(capabilities, model1.capabilities) && Objects.equals(name, model1.name)
+                && Objects.equals(model, model1.model) && Objects.equals(modifiedAt, model1.modifiedAt)
+                && Objects.equals(details, model1.details) && Objects.equals(modelInfo, model1.modelInfo);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(capabilities, name, model, modifiedAt, details, modelInfo);
+    }
+
+    @Override
+    public String toString() {
+        return "Model{\n" +
+                "\tparameters='" + parameters + "',\n" +
+                "\tlicense='" + license + "',\n" +
+                "\tcapabilities=" + capabilities + ",\n" +
+                "\tname='" + name + "',\n" +
+                "\tmodel='" + model + "',\n" +
+                "\tmodifiedAt='" + modifiedAt + "',\n" +
+                "\tsize=" + size + ",\n" +
+                "\tdigest='" + digest + ",'\n" +
+                "\tdetails=" + details + ",\n" +
+                "\ttemplate='" + template + ",'\n" +
+                "\tmodelInfo=" + modelInfo + ",\n" +
+                "\texpiresAt='" + expiresAt + ",'\n" +
+                "\tsizeVram=" + sizeVram + ",\n" +
+                "\tcontextLength=" + contextLength + ",\n" +
+                '}';
     }
 }
